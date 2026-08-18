@@ -41,7 +41,3 @@ npm run build
 ```
 
 Open http://localhost:3000 after starting the dev server.
-
-## Deployment Note
-
-The app exposes a public membership request endpoint. Deploy it only where open self-invites are acceptable, or place it behind your existing access controls.

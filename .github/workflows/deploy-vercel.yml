@@ -1,0 +1,56 @@
+name: Deploy github organization adder for AMSA 26-27 to Vercel
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vercel-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_ORG: amsa-26-27-lleida
+      ORG_INVITE_GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB_AMSA_26_27 }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check required secrets
+        run: |
+          test -n "$ORG_INVITE_GITHUB_TOKEN"
+          test -n "$VERCEL_ORG_ID"
+          test -n "$VERCEL_PROJECT_ID"
+          test -n "$VERCEL_TOKEN"
+
+      - name: Install dependencies
+        run: nix develop path:. -c npm ci
+
+      - name: Test
+        run: nix develop path:. -c npm test
+
+      - name: Build
+        run: nix develop path:. -c npm run build
+
+      - name: Deploy
+        run: |
+          nix develop path:. -c npx --yes vercel@latest deploy --prod --yes \
+            --token="$VERCEL_TOKEN" \
+            --env GITHUB_ORG="$GITHUB_ORG" \
+            --env GITHUB_TOKEN="$ORG_INVITE_GITHUB_TOKEN"
