@@ -1,0 +1,12 @@
+node_modules/
+.next/
+out/
+
+.env
+.env*.local
+
+.direnv/
+.DS_Store
+npm-debug.log*
+openspec
+.codex
